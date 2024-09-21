@@ -122,4 +122,31 @@ const editCafe = (req, res) => {
 }
 
 
-module.exports = { getCafes, createCafe, editCafe };
+// Delete Cafe
+const deleteCafe = (req, res) => {
+    const cafeId = req.params.id; // Get cafe ID from the URL parameter
+
+    // SQL query to delete the cafe by its ID
+    const sql = 'DELETE FROM Cafe WHERE id = ?';
+
+    // Execute the query
+    database.query(sql, [cafeId], (err, result) => {
+        if (err) {
+            console.error('Error deleting cafe:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Cafe not found' });
+        }
+
+        // Successfully deleted cafe
+        res.status(200).json({
+            message: 'Cafe deleted successfully',
+            id: cafeId
+        });
+    });
+};
+
+
+module.exports = { getCafes, createCafe, editCafe, deleteCafe };

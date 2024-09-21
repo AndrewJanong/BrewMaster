@@ -1,5 +1,5 @@
 const express = require('express');
-const { getCafes, createCafe, editCafe } = require('../controllers/cafesController');
+const { getCafes, createCafe, editCafe, deleteCafe } = require('../controllers/cafesController');
 
 router = express.Router();
 
@@ -11,5 +11,8 @@ router.post('/', createCafe);
 
 // PUT endpoint
 router.put('/:id', editCafe);
+
+// DELETE endpoint
+router.delete('/:id', deleteCafe);
 
 module.exports = router;
