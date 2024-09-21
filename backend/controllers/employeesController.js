@@ -29,7 +29,7 @@ const getEmployees = (req, res) => {
             res.json(results);
         }) 
     } catch (error) {
-        console.error('Error fetching cafes:', error);
+        console.error('Error fetching employees:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
