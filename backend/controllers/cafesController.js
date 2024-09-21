@@ -52,7 +52,7 @@ const createCafe = (req, res) => {
         database.query(sql_query, [id, name, description, logo, location], (err, result) => {
             if (err) {
                 console.error('Error inserting cafe:', err);
-                
+
                 if (err.code == 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Cafe with this name already exists' });
                 return res.status(500).json({ error: 'Internal server error' });
             }
@@ -73,5 +73,53 @@ const createCafe = (req, res) => {
     }
 }
 
+// Edit Cafe 
+const editCafe = (req, res) => {
+    try {
+        const cafeId = req.params.id; // Get the cafe ID from URL parameters
 
-module.exports = { getCafes, createCafe };
+        // Destructure the cafe details from the request body
+        const { name, description, logo, location } = req.body;
+
+        // Validate that the required fields are present
+        if (!name || !description || !location) {
+            return res.status(400).json({ error: 'Name, description, and location are required.' });
+        }
+
+        // SQL query to update the Cafe details
+        const sql_query = `
+            UPDATE Cafe
+            SET name = ?, description = ?, logo = ?, location = ?
+            WHERE id = ?;
+        `;
+
+        // Execute the query
+        database.query(sql_query, [name, description, logo, location, cafeId], (err, result) => {
+            if (err) {
+                console.error('Error updating cafe:', err);
+
+                if (err.code == 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Cafe with this name already exists' });
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'Cafe not found' });
+            }
+
+            // Successfully edited cafe
+            res.status(200).json({
+                id: cafeId,
+                name,
+                description,
+                logo,
+                location
+            });
+        });
+    } catch (error) {
+        console.error('Error editing cafe:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
+module.exports = { getCafes, createCafe, editCafe };
