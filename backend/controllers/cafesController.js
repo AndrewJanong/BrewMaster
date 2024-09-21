@@ -1,7 +1,7 @@
 const database = require('../connect_database');
 
 // get Cafes based on location and sorted by the highest number of employees first
-const getCafes = async (req, res) => {
+const getCafes = (req, res) => {
     try {
         const location = req.query.location; // Get location from query parameters
         const locationCondition = location ? `WHERE cafe.location = '${location}'` : '';
