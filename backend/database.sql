@@ -10,7 +10,7 @@ CREATE TABLE Employee (
 -- Create Cafe table
 CREATE TABLE Cafe (
     id CHAR(36) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT NOT NULL,
     logo VARCHAR(255), -- Optional
     location VARCHAR(255) NOT NULL
