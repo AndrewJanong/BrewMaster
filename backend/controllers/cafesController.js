@@ -1,6 +1,7 @@
 const database = require('../connect_database');
+const { v4: uuidv4 } = require('uuid');
 
-// get Cafes based on location and sorted by the highest number of employees first
+// Get Cafes based on location and sorted by the highest number of employees first
 const getCafes = (req, res) => {
     try {
         const location = req.query.location; // Get location from query parameters
@@ -15,10 +16,11 @@ const getCafes = (req, res) => {
             ORDER BY COUNT(employee_cafe.employee_id) DESC;
         `
 
+        // Execute the query
         database.query(sql_query, (err, results) => {
             if (err) throw err;
             
-            res.json(results);
+            res.status(200).json(results);
         }) 
     } catch (error) {
         console.error('Error fetching cafes:', error);
@@ -26,5 +28,50 @@ const getCafes = (req, res) => {
     }
 }
 
+// Create Cafe 
+const createCafe = (req, res) => {
+    try {
+        // Destructure the cafe details from the request body
+        const { name, description, logo, location } = req.body;
 
-module.exports = {getCafes};
+        // Validate that the required fields are present
+        if (!name || !description || !location) {
+            return res.status(400).json({ error: 'Name, description, and location are required.' });
+        }
+
+        // Generate a unique ID for the cafe
+        const id = uuidv4();
+
+        // SQL query to insert the new cafe into the database
+        const sql_query = `
+            INSERT INTO Cafe (id, name, description, logo, location) 
+            VALUES (?, ?, ?, ?, ?);
+        `;
+
+        // Execute the query
+        database.query(sql_query, [id, name, description, logo, location], (err, result) => {
+            if (err) {
+                console.error('Error inserting cafe:', err);
+                
+                if (err.code == 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Cafe with this name already exists' });
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+
+            // Successfully inserted the new cafe
+            res.status(201).json({
+                id,
+                name,
+                description,
+                logo,
+                location,
+                message: 'Cafe created successfully'
+            });
+        });
+    } catch (error) {
+        console.error('Error creating cafe:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
+module.exports = { getCafes, createCafe };
