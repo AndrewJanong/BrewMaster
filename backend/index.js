@@ -18,11 +18,15 @@ app.get('/', (req, res) => {
     res.json({ message: "API is running" });
 });
 
-// Start the server and connect to the database
-app.listen(4000, () => {
-    console.log('App listening on port 4000');
-    connection.query('SELECT 1', (err, results) => {
-        if (err) throw err;
-        console.log('Database connected');
+// Start the server and connect to the database only if the file is run directly
+if (require.main === module) {
+    app.listen(4000, () => {
+        console.log('App listening on port 4000');
+        connection.query('SELECT 1', (err, results) => {
+            if (err) throw err;
+            console.log('Database connected');
+        });
     });
-});
+}
+
+module.exports = app; // Export the app for testing
