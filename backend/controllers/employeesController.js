@@ -245,5 +245,31 @@ const editEmployee = (req, res) => {
     }
 }
 
+// Delete Employee
+const deleteEmployee = (req, res) => {
+    const employeeId = req.params.id;
 
-module.exports = { getEmployees, createEmployee, editEmployee };
+    // SQL query to delete employee from Employee table
+    const sqlDeleteEmployee = `DELETE FROM Employee WHERE id = ?`;
+
+    database.query(sqlDeleteEmployee, [employeeId], (err, result) => {
+        if (err) {
+            console.error('Error deleting employee:', err);
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        // If the employee does not exist
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Employee not found' });
+        }
+
+        // Successful deletion response
+        res.status(200).json({ 
+            message: 'Employee deleted successfully', 
+            employeeId 
+        });
+    });
+};
+
+
+module.exports = { getEmployees, createEmployee, editEmployee, deleteEmployee };

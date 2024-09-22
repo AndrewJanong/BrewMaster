@@ -1,5 +1,5 @@
 const express = require('express');
-const { getEmployees, createEmployee, editEmployee } = require('../controllers/employeesController');
+const { getEmployees, createEmployee, editEmployee, deleteEmployee } = require('../controllers/employeesController');
 
 router = express.Router();
 
@@ -11,6 +11,9 @@ router.post('/', createEmployee);
 
 // PUT endpoint
 router.put('/:id', editEmployee);
+
+// DELETE endpoint
+router.delete('/:id', deleteEmployee);
 
 
 module.exports = router;
