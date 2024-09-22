@@ -37,7 +37,7 @@ const getEmployees = (req, res) => {
 }
 
 // Create Employee
-const createEmployee = async (req, res) => {
+const createEmployee = (req, res) => {
     try {
         // Destructure the employee details from the request body
         const { name, email_address, phone_number, gender, cafe } = req.body;
@@ -130,5 +130,120 @@ const createEmployee = async (req, res) => {
     }
 }
 
+// Edit Employee
+const editEmployee = (req, res) => {
+    try {
+        const employeeId = req.params.id; // Get the employee ID from URL parameters
 
-module.exports = { getEmployees, createEmployee };
+        // Destructure the employee details from the request body
+        const { name, email_address, phone_number, gender, cafe } = req.body;
+
+        // Validate that the required fields are present
+        if (!name || !email_address || !phone_number || !gender) {
+            return res.status(400).json({ error: 'Name, email address, phone number, and gender are required.' });
+        }
+
+        // Check for valid email
+        if (!isValidEmail(email_address)) {
+            return res.status(400).json({ error: 'Invalid email address format.' });
+        }
+
+        // Validate phone number
+        if (!isValidPhoneNumber(phone_number)) {
+            return res.status(400).json({ error: 'Phone number must start with 8 or 9 and be 8 digits long.' });
+        }
+
+        // Check for valid gender
+        if (!isValidGender(gender)) {
+            return res.status(400).json({ error: 'Gender must be either Male or Female.' });
+        }
+
+        // Use the current date for start_date
+        const start_date = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+        // Query to get the current cafe_id for the employee
+        const getCurrentCafeQuery = `
+            SELECT cafe_id FROM Employee_Cafe WHERE employee_id = ?
+        `;
+
+        database.query(getCurrentCafeQuery, [employeeId], (err, result) => {
+            if (err) {
+                console.error('Error fetching cafe ID:', err);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
+
+            const currentCafeId = result.length ? result[0].cafe_id : null;
+
+            // Query to get the new cafe_id based on cafe name
+            const getNewCafeIdQuery = `SELECT id FROM Cafe WHERE name = ?`;
+            database.query(getNewCafeIdQuery, [cafe], (err, cafeResult) => {
+                if (err) {
+                    console.error('Error fetching cafe ID:', err);
+                    return res.status(500).json({ error: 'Internal server error' });
+                }
+                
+                if (cafe && cafeResult.length === 0) {
+                    return res.status(404).json({ error: 'Cafe not found' });
+                }
+
+                const newCafeId = cafe ? cafeResult[0].id : '';
+
+                // SQL query to update the Employee details
+                const updateEmployeeQuery = `
+                    UPDATE Employee SET name = ?, email_address = ?, phone_number = ?, gender = ? WHERE id = ?
+                `;
+
+                database.query(updateEmployeeQuery, [name, email_address, phone_number, gender, employeeId], (err) => {
+                    if (err) {
+                        console.error('Error updating employee:', err);
+
+                        if (err.code = 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Employee with this email or phone number already exists' });
+                        return res.status(500).json({ error: 'Internal server error' });
+                    }
+
+                    // If the cafe has changed, update the Employee_Cafe table
+                    if (newCafeId && newCafeId != currentCafeId) {
+                        const updateEmployeeCafeQuery = `
+                            UPDATE Employee_Cafe SET cafe_id = ?, start_date = ? WHERE employee_id = ?
+                        `;
+
+                        database.query(updateEmployeeCafeQuery, [newCafeId, start_date, employeeId], (err) => {
+                            if (err) {
+                                console.error('Error updating Employee_Cafe table:', err);
+                                return res.status(500).json({ error: 'Internal server error' });
+                            }
+                        });
+                    } else if (newCafeId == '' && currentCafeId) {
+                        const deleteEmployeeCafeQuery = `
+                            DELETE FROM Employee_Cafe WHERE employee_id = ? AND cafe_id = ?
+                        `;
+
+                        database.query(deleteEmployeeCafeQuery, [employeeId, currentCafeId], (err) => {
+                            if (err) {
+                                console.error('Error updating Employee_Cafe table:', err);
+                                return res.status(500).json({ error: 'Internal server error' });
+                            }
+                        });
+                    }
+
+                    res.status(200).json({
+                        message: 'Employee updated successfully',
+                        employeeId,
+                        name,
+                        email_address,
+                        phone_number,
+                        gender,
+                        cafe
+                    });
+                    
+                });
+            });
+        });
+    } catch (error) {
+        console.error('Error creating employee:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+
+module.exports = { getEmployees, createEmployee, editEmployee };

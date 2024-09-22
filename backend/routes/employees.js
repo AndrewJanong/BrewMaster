@@ -1,5 +1,5 @@
 const express = require('express');
-const { getEmployees, createEmployee } = require('../controllers/employeesController');
+const { getEmployees, createEmployee, editEmployee } = require('../controllers/employeesController');
 
 router = express.Router();
 
@@ -8,6 +8,9 @@ router.get('/', getEmployees);
 
 // POST endpoint
 router.post('/', createEmployee);
+
+// PUT endpoint
+router.put('/:id', editEmployee);
 
 
 module.exports = router;
