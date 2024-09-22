@@ -21,7 +21,7 @@ CREATE TABLE Employee_Cafe (
     employee_id VARCHAR(9),
     cafe_id CHAR(36),
     start_date DATE NOT NULL,
-    PRIMARY KEY (employee_id, cafe_id),
+    PRIMARY KEY (employee_id),
     FOREIGN KEY (employee_id) REFERENCES Employee(id) ON DELETE CASCADE,
     FOREIGN KEY (cafe_id) REFERENCES Cafe(id) ON DELETE CASCADE
 );

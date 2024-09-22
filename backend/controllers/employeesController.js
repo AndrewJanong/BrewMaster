@@ -76,11 +76,11 @@ const createEmployee = (req, res) => {
                 return res.status(500).json({ error: 'Internal server error' });
             }
 
-            if (results.length === 0) {
+            if (cafe && results.length === 0) {
                 return res.status(400).json({ error: 'Cafe name does not exist.' });
             }
 
-            const cafe_id = results[0].id; // Get the cafe ID
+            const cafe_id = cafe ? results[0].id : ''; // Get the cafe ID
 
             // SQL query to insert the new employee into the Employee table
             const insertEmployeeQuery = `
@@ -103,24 +103,25 @@ const createEmployee = (req, res) => {
                     VALUES (?, ?, ?);
                 `;
 
-                // Execute the relationship insert query
-                database.query(insertEmployeeCafeQuery, [id, cafe_id, start_date], (err) => {
-                    if (err) {
-                        console.error('Error inserting employee-cafe relationship:', err);
-                        return res.status(500).json({ error: 'Internal server error' });
-                    }
-
-                    // Successfully inserted the new employee and relationship
-                    res.status(201).json({
-                        id,
-                        name,
-                        email_address,
-                        phone_number,
-                        gender,
-                        cafe,
-                        start_date,
-                        message: 'Employee created successfully and assigned to cafe'
+                // Execute the relationship insert query if cafe is given
+                if (cafe_id) {
+                    database.query(insertEmployeeCafeQuery, [id, cafe_id, start_date], (err) => {
+                        if (err) {
+                            console.error('Error inserting employee-cafe relationship:', err);
+                            return res.status(500).json({ error: 'Internal server error' });
+                        }
                     });
+                }
+
+                // Successfully inserted the new employee and relationship
+                res.status(201).json({
+                    id,
+                    name,
+                    email_address,
+                    phone_number,
+                    gender,
+                    cafe,
+                    message: 'Employee created successfully and assigned to cafe'
                 });
             });
         });
