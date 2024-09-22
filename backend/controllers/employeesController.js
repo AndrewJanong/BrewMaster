@@ -36,6 +36,33 @@ const getEmployees = async (req, res) => {
     }
 }
 
+// Validates data for the employee to be inserted or updated
+const validateEmployeeData = (req, res) => {
+    const { name, email_address, phone_number, gender } = req.body;
+
+    // Validate that the required fields are present
+    if (!name || !email_address || !phone_number || !gender) {
+        return res.status(400).json({ error: 'Name, email address, phone number, and gender are required.' });
+    }
+
+    // Check for valid email
+    if (!isValidEmail(email_address)) {
+        return res.status(400).json({ error: 'Invalid email address format.' });
+    }
+
+    // Validate phone number
+    if (!isValidPhoneNumber(phone_number)) {
+        return res.status(400).json({ error: 'Phone number must start with 8 or 9 and be 8 digits long.' });
+    }
+
+    // Check for valid gender
+    if (!isValidGender(gender)) {
+        return res.status(400).json({ error: 'Gender must be either Male or Female.' });
+    }
+
+    return null; // Return null if validation passes
+};
+
 // Create Employee
 const createEmployee = async (req, res) => {
     try {
@@ -43,24 +70,8 @@ const createEmployee = async (req, res) => {
         const { name, email_address, phone_number, gender, cafe } = req.body;
 
         // Validate that the required fields are present
-        if (!name || !email_address || !phone_number || !gender) {
-            return res.status(400).json({ error: 'Name, email address, phone number, and gender are required.' });
-        }
-
-        // Check for valid email
-        if (!isValidEmail(email_address)) {
-            return res.status(400).json({ error: 'Invalid email address format.' });
-        }
-
-        // Validate phone number
-        if (!isValidPhoneNumber(phone_number)) {
-            return res.status(400).json({ error: 'Phone number must start with 8 or 9 and be 8 digits long.' });
-        }
-
-        // Check for valid gender
-        if (!isValidGender(gender)) {
-            return res.status(400).json({ error: 'Gender must be either Male or Female.' });
-        }
+        const validationError = validateEmployeeData(req, res);
+        if (validationError) return validationError;
     
         // Generate employee ID
         const id = generateEmployeeId();
@@ -126,24 +137,8 @@ const editEmployee = async (req, res) => {
         const { name, email_address, phone_number, gender, cafe } = req.body;
 
         // Validate that the required fields are present
-        if (!name || !email_address || !phone_number || !gender) {
-            return res.status(400).json({ error: 'Name, email address, phone number, and gender are required.' });
-        }
-
-        // Check for valid email
-        if (!isValidEmail(email_address)) {
-            return res.status(400).json({ error: 'Invalid email address format.' });
-        }
-
-        // Validate phone number
-        if (!isValidPhoneNumber(phone_number)) {
-            return res.status(400).json({ error: 'Phone number must start with 8 or 9 and be 8 digits long.' });
-        }
-
-        // Check for valid gender
-        if (!isValidGender(gender)) {
-            return res.status(400).json({ error: 'Gender must be either Male or Female.' });
-        }
+        const validationError = validateEmployeeData(req, res);
+        if (validationError) return validationError;
 
         // Use the current date for start_date
         const start_date = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
