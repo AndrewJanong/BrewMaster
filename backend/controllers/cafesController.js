@@ -131,8 +131,8 @@ const deleteCafe = async (req, res) => {
             message: 'Cafe deleted successfully',
             id: cafeId
         });
-    } catch (err) {
-        console.error('Error deleting cafe:', err);
+    } catch (error) {
+        console.error('Error deleting cafe:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 };

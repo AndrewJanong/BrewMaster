@@ -2,13 +2,13 @@ const database = require('../connect_database');
 const { generateEmployeeId, isValidEmail, isValidGender, isValidPhoneNumber } = require('../utils/employeeUtils');
 
 // Get Employees based on cafe and sorted by the highest number of days worked first
-const getEmployees = (req, res) => {
+const getEmployees = async (req, res) => {
     try {
         const cafe = req.query.cafe; // Get location from query parameters
-        const cafeCondition = cafe ? `WHERE cafe_match.name = '${cafe}'` : '';
+        const cafeCondition = cafe ? 'WHERE cafe_match.name = ?' : '';
 
         // SQL query to get all employees (based on cafe if provided) sorted by number of days worked
-        let sql_query = `
+        let getEmployeesQuery = `
             SELECT employee.id, 
                 employee.name, 
                 employee.email_address, 
@@ -24,12 +24,12 @@ const getEmployees = (req, res) => {
             ORDER BY days_worked DESC;
         `
 
+        const queryParams = cafe ? [cafe] : [];
+
         // Execute the query
-        database.query(sql_query, (err, results) => {
-            if (err) throw err;
-            
-            res.status(200).json(results);
-        }) 
+        const [results] = await database.promise().query(getEmployeesQuery, queryParams);
+
+        res.status(200).json(results);
     } catch (error) {
         console.error('Error fetching employees:', error);
         return res.status(500).json({ error: 'Internal server error' });
@@ -37,7 +37,7 @@ const getEmployees = (req, res) => {
 }
 
 // Create Employee
-const createEmployee = (req, res) => {
+const createEmployee = async (req, res) => {
     try {
         // Destructure the employee details from the request body
         const { name, email_address, phone_number, gender, cafe } = req.body;
@@ -70,69 +70,55 @@ const createEmployee = (req, res) => {
 
         // SQL query to get the cafe ID based on cafe name
         const getCafeIdQuery = 'SELECT id FROM Cafe WHERE name = ?';
-        database.query(getCafeIdQuery, [cafe], (err, results) => {
-            if (err) {
-                console.error('Error fetching cafe ID:', err);
-                return res.status(500).json({ error: 'Internal server error' });
-            }
+        const [cafeResults] = await database.promise().query(getCafeIdQuery, [cafe]);
 
-            if (cafe && results.length === 0) {
-                return res.status(400).json({ error: 'Cafe name does not exist.' });
-            }
+        if (cafe && cafeResults.length === 0) {
+            return res.status(404).json({ error: 'Cafe name does not exist.' });
+        }
 
-            const cafe_id = cafe ? results[0].id : ''; // Get the cafe ID
+        const cafe_id = cafe ? cafeResults[0].id : null; // Get the cafe ID
 
-            // SQL query to insert the new employee into the Employee table
-            const insertEmployeeQuery = `
-                INSERT INTO Employee (id, name, email_address, phone_number, gender) 
-                VALUES (?, ?, ?, ?, ?);
+        // SQL query to insert the new employee into the Employee table
+        const insertEmployeeQuery = `
+            INSERT INTO Employee (id, name, email_address, phone_number, gender) 
+            VALUES (?, ?, ?, ?, ?);
+        `;
+
+        // Execute the employee insert query
+        await database.promise().query(insertEmployeeQuery, [id, name, email_address, phone_number, gender]);
+
+        // SQL query to insert the employee-cafe relationship into Employee_Cafe table
+        if (cafe_id) {
+            const insertEmployeeCafeQuery = `
+                INSERT INTO Employee_Cafe (employee_id, cafe_id, start_date) 
+                VALUES (?, ?, ?);
             `;
 
-            // Execute the employee insert query
-            database.query(insertEmployeeQuery, [id, name, email_address, phone_number, gender], (err) => {
-                if (err) {
-                    console.error('Error inserting employee:', err);
+            // Execute the relationship insert query
+            await database.promise().query(insertEmployeeCafeQuery, [id, cafe_id, start_date]);
+        }
 
-                    if (err.code = 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Employee with this email or phone number already exists' });
-                    return res.status(500).json({ error: 'Internal server error' });
-                }
-
-                // SQL query to insert the employee-cafe relationship into Employee_Cafe table
-                const insertEmployeeCafeQuery = `
-                    INSERT INTO Employee_Cafe (employee_id, cafe_id, start_date) 
-                    VALUES (?, ?, ?);
-                `;
-
-                // Execute the relationship insert query if cafe is given
-                if (cafe_id) {
-                    database.query(insertEmployeeCafeQuery, [id, cafe_id, start_date], (err) => {
-                        if (err) {
-                            console.error('Error inserting employee-cafe relationship:', err);
-                            return res.status(500).json({ error: 'Internal server error' });
-                        }
-                    });
-                }
-
-                // Successfully inserted the new employee and relationship
-                res.status(201).json({
-                    id,
-                    name,
-                    email_address,
-                    phone_number,
-                    gender,
-                    cafe,
-                    message: 'Employee created successfully and assigned to cafe'
-                });
-            });
+        // Successfully inserted the new employee and relationship (if any)
+        res.status(201).json({
+            id,
+            name,
+            email_address,
+            phone_number,
+            gender,
+            cafe,
+            message: 'Employee created successfully and assigned to cafe'
         });
     } catch (error) {
         console.error('Error creating employee:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'Employee with this email or phone number already exists' });
+        }
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
 // Edit Employee
-const editEmployee = (req, res) => {
+const editEmployee = async (req, res) => {
     try {
         const employeeId = req.params.id; // Get the employee ID from URL parameters
 
@@ -166,98 +152,71 @@ const editEmployee = (req, res) => {
         const getCurrentCafeQuery = `
             SELECT cafe_id FROM Employee_Cafe WHERE employee_id = ?
         `;
+        const [currentCafeResults] = await database.promise().query(getCurrentCafeQuery, [employeeId]);
 
-        database.query(getCurrentCafeQuery, [employeeId], (err, result) => {
-            if (err) {
-                console.error('Error fetching cafe ID:', err);
-                return res.status(500).json({ error: 'Internal server error' });
-            }
+        const currentCafeId = currentCafeResults.length ? currentCafeResults[0].cafe_id : null;
 
-            const currentCafeId = result.length ? result[0].cafe_id : null;
+        // Query to get the new cafe_id based on cafe name
+        const getNewCafeIdQuery = `SELECT id FROM Cafe WHERE name = ?`;
+        const [cafeResults] = await database.promise().query(getNewCafeIdQuery, [cafe]);
 
-            // Query to get the new cafe_id based on cafe name
-            const getNewCafeIdQuery = `SELECT id FROM Cafe WHERE name = ?`;
-            database.query(getNewCafeIdQuery, [cafe], (err, cafeResult) => {
-                if (err) {
-                    console.error('Error fetching cafe ID:', err);
-                    return res.status(500).json({ error: 'Internal server error' });
-                }
-                
-                if (cafe && cafeResult.length === 0) {
-                    return res.status(404).json({ error: 'Cafe not found' });
-                }
+        if (cafe && cafeResults.length === 0) {
+            return res.status(404).json({ error: 'Cafe not found' });
+        }
 
-                const newCafeId = cafe ? cafeResult[0].id : '';
+        const newCafeId = cafe ? cafeResults[0].id : null;
 
-                // SQL query to update the Employee details
-                const updateEmployeeQuery = `
-                    UPDATE Employee SET name = ?, email_address = ?, phone_number = ?, gender = ? WHERE id = ?
-                `;
+        // SQL query to update the Employee details
+        const updateEmployeeQuery = `
+            UPDATE Employee SET name = ?, email_address = ?, phone_number = ?, gender = ? WHERE id = ?
+        `;
+        await database.promise().query(updateEmployeeQuery, [name, email_address, phone_number, gender, employeeId]);
 
-                database.query(updateEmployeeQuery, [name, email_address, phone_number, gender, employeeId], (err) => {
-                    if (err) {
-                        console.error('Error updating employee:', err);
+        if (newCafeId && currentCafeId === null) { // If currently unemployes, insert to Employee_Cafe table
+            const insertEmployeeCafeQuery = `
+                INSERT INTO Employee_Cafe (employee_id, cafe_id, start_date) 
+                VALUES (?, ?, ?); 
+            `
+            await database.promise().query(insertEmployeeCafeQuery, [employeeId, newCafeId, start_date]);
+        } else if (newCafeId && newCafeId !== currentCafeId) { // If the cafe has changed, update the Employee_Cafe table
+            const updateEmployeeCafeQuery = `
+                UPDATE Employee_Cafe SET cafe_id = ?, start_date = ? WHERE employee_id = ?
+            `;
+            await database.promise().query(updateEmployeeCafeQuery, [newCafeId, start_date, employeeId]);
+        } else if (newCafeId === null && currentCafeId) { // If now unemployes, delete from Employee_Cafe table
+            const deleteEmployeeCafeQuery = `
+                DELETE FROM Employee_Cafe WHERE employee_id = ? AND cafe_id = ?
+            `;
+            await database.promise().query(deleteEmployeeCafeQuery, [employeeId, currentCafeId]);
+        }
 
-                        if (err.code = 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Employee with this email or phone number already exists' });
-                        return res.status(500).json({ error: 'Internal server error' });
-                    }
-
-                    // If the cafe has changed, update the Employee_Cafe table
-                    if (newCafeId && newCafeId != currentCafeId) {
-                        const updateEmployeeCafeQuery = `
-                            UPDATE Employee_Cafe SET cafe_id = ?, start_date = ? WHERE employee_id = ?
-                        `;
-
-                        database.query(updateEmployeeCafeQuery, [newCafeId, start_date, employeeId], (err) => {
-                            if (err) {
-                                console.error('Error updating Employee_Cafe table:', err);
-                                return res.status(500).json({ error: 'Internal server error' });
-                            }
-                        });
-                    } else if (newCafeId == '' && currentCafeId) {
-                        const deleteEmployeeCafeQuery = `
-                            DELETE FROM Employee_Cafe WHERE employee_id = ? AND cafe_id = ?
-                        `;
-
-                        database.query(deleteEmployeeCafeQuery, [employeeId, currentCafeId], (err) => {
-                            if (err) {
-                                console.error('Error updating Employee_Cafe table:', err);
-                                return res.status(500).json({ error: 'Internal server error' });
-                            }
-                        });
-                    }
-
-                    res.status(200).json({
-                        message: 'Employee updated successfully',
-                        employeeId,
-                        name,
-                        email_address,
-                        phone_number,
-                        gender,
-                        cafe
-                    });
-                    
-                });
-            });
+        res.status(200).json({
+            message: 'Employee updated successfully',
+            employeeId,
+            name,
+            email_address,
+            phone_number,
+            gender,
+            cafe
         });
     } catch (error) {
-        console.error('Error creating employee:', error);
+        console.error('Error updating employee:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'Employee with this email or phone number already exists' });
+        }
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
 
-// Delete Employee
-const deleteEmployee = (req, res) => {
-    const employeeId = req.params.id;
+// Delete Employee, this will delete the employee in the Employee_Cafe table as well
+const deleteEmployee = async (req, res) => {
+    try {
+        const employeeId = req.params.id; // Get the employee ID from URL parameters
 
-    // SQL query to delete employee from Employee table
-    const sqlDeleteEmployee = `DELETE FROM Employee WHERE id = ?`;
+        // SQL query to delete employee from Employee table
+        const sqlDeleteEmployee = `DELETE FROM Employee WHERE id = ?`;
 
-    database.query(sqlDeleteEmployee, [employeeId], (err, result) => {
-        if (err) {
-            console.error('Error deleting employee:', err);
-            return res.status(500).json({ error: 'Internal server error' });
-        }
+        const [result] = await database.promise().query(sqlDeleteEmployee, [employeeId]);
 
         // If the employee does not exist
         if (result.affectedRows === 0) {
@@ -269,7 +228,10 @@ const deleteEmployee = (req, res) => {
             message: 'Employee deleted successfully', 
             employeeId 
         });
-    });
+    } catch (error) {
+        console.error('Error deleting employee:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
 };
 
 
