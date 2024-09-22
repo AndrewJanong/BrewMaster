@@ -21,8 +21,8 @@ app.get('/', (req, res) => {
 // Start the server and connect to the database
 app.listen(4000, () => {
     console.log('App listening on port 4000');
-    connection.connect((err) => {
+    connection.query('SELECT 1', (err, results) => {
         if (err) throw err;
         console.log('Database connected');
-    })
+    });
 });
