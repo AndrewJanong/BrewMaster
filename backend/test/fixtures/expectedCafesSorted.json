@@ -1,0 +1,35 @@
+[
+    {
+      "id": "c3d4e5f6-a7b8-9012-cdef-3456789012cd",
+      "name": "Red Espresso",
+      "description": "Best espresso in town",
+      "logo": "https://example.com/logo2.png",
+      "location": "Suburbs",
+      "employees": 3
+    },
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-2345678901bc",
+      "name": "Green Coffee",
+      "description": "Specializes in organic coffee",
+      "logo": null,
+      "location": "Uptown",
+      "employees": 2
+    },
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
+      "name": "Cafe Blue",
+      "description": "A cozy cafe with great ambiance",
+      "logo": "https://example.com/logo1.png",
+      "location": "Downtown",
+      "employees": 1
+    },
+    {
+      "id": "d4e5f6a7-b8c9-0123-defg-4567890123de",
+      "name": "Yellow Bean",
+      "description": "Popular spot for students",
+      "logo": null,
+      "location": "City Center",
+      "employees": 0
+    }
+  ]
+  
