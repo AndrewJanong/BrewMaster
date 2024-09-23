@@ -98,7 +98,8 @@ const editCafe = async (req, res) => {
             name,
             description,
             logo,
-            location
+            location,
+            message: 'Cafe edited successfully'
         });
     } catch (error) {
         console.error('Error creating cafe:', error);
