@@ -48,4 +48,47 @@ describe('Employees API', () => {
             }
         });
     });
+
+    describe('POST /employees', () => {
+        it("Returns success message and employee data", async () => {
+            const res = await request(app).post("/employees").send(employeeTestData.validEmployee);
+
+            expect(res.statusCode).toEqual(201);
+            expect(res.body).toEqual({
+                id: expect.any(String),
+                ...employeeTestData.validEmployee,
+                message: "Employee created successfully"
+            });
+        });
+
+        it("Inserting employee with unexisting cafe should return error", async () => {
+            const res = await request(app).post("/employees").send(employeeTestData.invalidEmployee.unexistingCafe);
+
+            expect(res.statusCode).toEqual(404);
+        });
+
+        it("Inserting employee with existing email or phone number should return error", async () => {
+            const res = await request(app).post("/employees").send(employeeTestData.invalidEmployee.existingPhoneNumber);
+
+            expect(res.statusCode).toEqual(409);
+        });
+
+        it("Inserting cafe with empty name, email, phone, or gender should return error", async () => {
+            const res = await request(app).post("/employees").send(employeeTestData.invalidEmployee.emptyName);
+
+            expect(res.statusCode).toEqual(400);
+        });
+
+        it("Inserting cafe with invalid email should return error", async () => {
+            const res = await request(app).post("/employees").send(employeeTestData.invalidEmployee.invalidEmail);
+
+            expect(res.statusCode).toEqual(400);
+        });
+
+        it("Inserting cafe with invalid phone number should return error", async () => {
+            const res = await request(app).post("/employees").send(employeeTestData.invalidEmployee.invalidEmail);
+
+            expect(res.statusCode).toEqual(400);
+        });
+    })
 });

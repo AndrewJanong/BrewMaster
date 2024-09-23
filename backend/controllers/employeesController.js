@@ -117,7 +117,7 @@ const createEmployee = async (req, res) => {
             phone_number,
             gender,
             cafe,
-            message: 'Employee created successfully and assigned to cafe'
+            message: 'Employee created successfully'
         });
     } catch (error) {
         console.error('Error creating employee:', error);
