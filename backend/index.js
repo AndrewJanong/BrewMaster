@@ -1,10 +1,14 @@
 const express = require("express");
 const app = express();
+const cors = require('cors');
 const connection = require('./connect_database');
 
 // Import routes
 const cafesRoutes = require('./routes/cafes');
 const employeesRoutes = require('./routes/employees');
+
+// enable CORS
+app.use(cors());
 
 // Middleware to parse JSON requests
 app.use(express.json());
