@@ -106,7 +106,7 @@ describe('Cafes API', () => {
     describe("DELETE /cafes/:id", () => {
         let cafeId;
 
-        if ("Returns success message and deleted cafe id", async () => {
+        it ("Returns success message and deleted cafe id", async () => {
             const cafe = await request(app).post('/cafes').send(cafeTestData.deleteCafe);
             cafeId = cafe.body.id; // Store the ID of the created cafe for deletion test
 
