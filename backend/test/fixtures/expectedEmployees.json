@@ -1,0 +1,44 @@
+[
+    {
+        "id": "UI0000001",
+        "name": "John Doe",
+        "email_address": "john.doe@example.com",
+        "phone_number": "91234567",
+        "cafe": "Cafe Blue"
+    },
+    {
+        "id": "UI0000002",
+        "name": "Jane Smith",
+        "email_address": "jane.smith@example.com",
+        "phone_number": "82345678",
+        "cafe": "Green Coffee"
+    },
+    {
+        "id": "UI0000003",
+        "name": "Michael Johnson",
+        "email_address": "michael.johnson@example.com",
+        "phone_number": "91237654",
+        "cafe": "Red Espresso"
+    },
+    {
+        "id": "UI0000004",
+        "name": "Emily Davis",
+        "email_address": "emily.davis@example.com",
+        "phone_number": "82346789",
+        "cafe": "Red Espresso"
+    },
+    {
+        "id": "UI0000006",
+        "name": "Lionel Messi",
+        "email_address": "lionel.messi@example.com",
+        "phone_number": "93906789",
+        "cafe": "Green Coffee"
+    },
+    {
+        "id": "UI0000005",
+        "name": "Antony",
+        "email_address": "antony@example.com",
+        "phone_number": "82387938",
+        "cafe": "Red Espresso"
+    }
+]
