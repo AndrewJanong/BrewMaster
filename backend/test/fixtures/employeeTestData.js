@@ -6,6 +6,20 @@ const employeeTestData = {
         gender: "Male",
         cafe: "Yellow Bean"
     },
+    beforeUpdateEmployee: {
+        name: "Before Update",
+        email_address: "before.update@example.com",
+        phone_number: "91232357",
+        gender: "Male",
+        cafe: "Yellow Bean"
+    },
+    updatedEmployee: {
+        name: "Updated",
+        email_address: "updated@example.com",
+        phone_number: "92342357",
+        gender: "Male",
+        cafe: "Cafe Blue"
+    },
     invalidEmployee: {
         emptyName: {
             name: "",

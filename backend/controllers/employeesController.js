@@ -187,7 +187,7 @@ const editEmployee = async (req, res) => {
 
         res.status(200).json({
             message: 'Employee updated successfully',
-            employeeId,
+            id: employeeId,
             name,
             email_address,
             phone_number,
@@ -221,7 +221,7 @@ const deleteEmployee = async (req, res) => {
         // Successful deletion response
         res.status(200).json({ 
             message: 'Employee deleted successfully', 
-            employeeId 
+            id: employeeId 
         });
     } catch (error) {
         console.error('Error deleting employee:', error);
