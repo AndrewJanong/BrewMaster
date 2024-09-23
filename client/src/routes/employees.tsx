@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
+import ResponsiveDrawer from '../components/SideBar';
 
 interface Employee {
     id: string;
@@ -13,10 +14,12 @@ interface Employee {
 
 export const Route = createFileRoute('/employees')({
     component: () => {
+        const apiUrl = import.meta.env.VITE_API_URL;
+
         const { status, data, error } = useQuery<Employee[]>({
             queryKey: ['cafes'],
             queryFn: async () => {
-                const response = await axios.get('http://localhost:4000/employees');
+                const response = await axios.get(`${apiUrl}/employees`);
                 const data = await response.data;
                 return data;
             }
@@ -26,11 +29,13 @@ export const Route = createFileRoute('/employees')({
         if (status === 'error') return <p>{error.message}</p>;
 
         return (
-            <div>
-                {data?.map((employee) => (
-                    <p>{employee.name}</p>
-                ))}
-            </div>
+            <ResponsiveDrawer>
+                <div>
+                    {data?.map((employee) => (
+                        <p>{employee.name}</p>
+                    ))}
+                </div>
+            </ResponsiveDrawer>
             
         )
     }   

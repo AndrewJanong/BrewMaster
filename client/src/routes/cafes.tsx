@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
+import ResponsiveDrawer from '../components/SideBar';
 
 // Define the cafe interface
 interface Cafe {
@@ -14,10 +15,12 @@ interface Cafe {
 
 export const Route = createFileRoute('/cafes')({
     component: () => {
+        const apiUrl = import.meta.env.VITE_API_URL;
+
         const { status, data, error } = useQuery<Cafe[]>({
             queryKey: ['cafes'],
             queryFn: async () => {
-                const response = await axios.get('http://localhost:4000/cafes');
+                const response = await axios.get(`${apiUrl}/cafes`);
                 const data = await response.data;
                 return data;
             }
@@ -27,12 +30,13 @@ export const Route = createFileRoute('/cafes')({
         if (status === 'error') return <p>{error.message}</p>;
 
         return (
-            <div>
-                {data?.map((cafe) => (
-                    <p>{cafe.name}</p>
-                ))}
-            </div>
-            
+            <ResponsiveDrawer>
+                <div>
+                    {data?.map((cafe) => (
+                        <p>{cafe.name}</p>
+                    ))}
+                </div>
+            </ResponsiveDrawer>
         )
     }   
 })
