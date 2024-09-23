@@ -90,7 +90,7 @@ describe('Employees API', () => {
 
             expect(res.statusCode).toEqual(400);
         });
-    })
+    });
 
     describe('PUT /employees/:id', () => {
         let employeeId;
@@ -113,7 +113,6 @@ describe('Employees API', () => {
             const getRes = await request(app).get(`/employees?cafe=${employeeTestData.updatedEmployee.cafe}`);
 
             expect(getRes.statusCode).toEqual(200);
-            console.log(getRes.body);
             expect(getRes.body).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
@@ -152,5 +151,32 @@ describe('Employees API', () => {
 
             expect(res.statusCode).toEqual(400);
         });
-    })
+    });
+
+    describe("DELETE /employees/:id", () => {
+        let employeeId;
+
+        it ("Returns success message and deleted employee id", async () => {
+            const employee = await request(app).post('/employees').send(employeeTestData.deleteEmployee);
+            employeeId = employee.body.id; // Store the ID of the created employee for deletion test
+
+            const res = await request(app).delete(`/employees/${employeeId}`);
+            expect(res.statusCode).toEqual(200);
+            expect(res.body).toEqual({
+                message: 'Employee deleted successfully',
+                id: employeeId
+            });
+
+            // Verify that the employee no longer exists
+            const getRes = await request(app).get(`/employees`);
+            expect(getRes.statusCode).toEqual(200);
+            expect(getRes.body).not.toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        name: 'Delete'
+                    })
+                ])
+            );
+        });
+    });
 });

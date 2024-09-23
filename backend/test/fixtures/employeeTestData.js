@@ -20,6 +20,13 @@ const employeeTestData = {
         gender: "Male",
         cafe: "Cafe Blue"
     },
+    deleteEmployee: {
+        name: "Delete",
+        email_address: "delete@example.com",
+        phone_number: "93452357",
+        gender: "Male",
+        cafe: "Cafe Blue"
+    },
     invalidEmployee: {
         emptyName: {
             name: "",
